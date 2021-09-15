@@ -63,7 +63,7 @@ contract Lottery {
     /*
     4. Pick a winner 
         1. Needs a random generator function to draw the lottery
-        2. Problem: should use ChainLink VRF(verifiable random function) in real world
+        2. Real world application: should consider using ChainLink VRF(verifiable random function), as block.timestamp can be manipulated by miners. 
     */
     function getRandom() public view returns (uint256) {
         return
@@ -91,20 +91,7 @@ contract Lottery {
         uint256 r = getRandom();
         uint256 winnerNum = r % lotteryPool.length;
         winner = lotteryPool[winnerNum];
-    }
 
-    function showWinner() public view returns (address) {
-        return winner;
-    }
-
-    /*
-    5. Dispurse payout and reset the lottery
-        1. lottery manager gets 10% as fee;
-        2. The remaining is sent to the lottery winner.
-        3. Lottery balance should be zero and lottery pool is reset to an empty array.
-    */
-
-    function sendMoney() private {
         //Manager fee is 10% of the pool balance; Winner gets the rest;
         uint256 mgrFee = (getLotteryBalance() * 10) / 100;
         uint256 winnerPrize = (getLotteryBalance() * 90) / 100;
