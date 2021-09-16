@@ -7,12 +7,13 @@ pragma solidity >=0.7.0 <0.9.0;
   1. Players send their ETHs to a lottery contract address, and their wallet address will be registered. 
   2. Each entry to play is 1 ETH;
   3. Players can send multiple entries for a higer chance to win;
-  4. Minimum players for winner drawing is 3 players;
-  5. There is a lottery manager who controls the lottery contract address, with ability to see the balance and pick a winner;
-  6. The lottery manager is automatically added to the lottery pool, no eth entry is required.
-  7. Once a winner is randomly picked, the lottery contract will transfer the entire remaining balace to the winner's address, net of a mgmt fee;
-  8. Once funds is dispersed, the lottery is reset. 
-  9. The lottery manager receives 10% of the lottery pool balance as a fee.
+  4. Minimum players for winner drawing is 10 players;
+  5. There is a lottery manager who controls the lottery contract address;
+  6. The lottery manager can entered the lottery pool following the same rules.
+  7. Any one can pick the winner once there is a minimum of 10 players.
+  8. Once a winner is randomly picked, the lottery contract will transfer the entire remaining balace to the winner's address, net of a mgmt fee;
+  9. Once funds is dispersed, the lottery is reset. 
+  10. The lottery manager receives 10% of the lottery pool balance as a fee.
   
 */
 
@@ -37,7 +38,6 @@ contract Lottery {
 
     constructor() {
         manager = msg.sender;
-        lotteryPool.push(payable(msg.sender));
     }
 
     /*
@@ -53,10 +53,7 @@ contract Lottery {
     }
 
     function getLotteryBalance() public view returns (uint256) {
-        require(
-            msg.sender == manager,
-            "Only the lottery manager can view the balance."
-        );
+        //Anyone can view the balance such that anyone can pick the winner after there is a minimum 10 players.
         return address(this).balance;
     }
 
@@ -81,13 +78,10 @@ contract Lottery {
     function pickWinner() public {
         //Winner picking
         require(
-            lotteryPool.length >= 3,
-            "Needs a minimum of three players to draw a winner."
+            lotteryPool.length >= 10,
+            "Needs a minimum of ten players to draw a winner."
         );
-        require(
-            msg.sender == manager,
-            "Only the lottery manager can draw the winner."
-        );
+
         uint256 r = getRandom();
         uint256 winnerNum = r % lotteryPool.length;
         winner = lotteryPool[winnerNum];
@@ -97,15 +91,10 @@ contract Lottery {
         uint256 winnerPrize = (getLotteryBalance() * 90) / 100;
 
         //Dispurse funds
-        require(
-            msg.sender == manager,
-            "Only the lottery manager can dispurse funds."
-        );
         payable(manager).transfer(mgrFee);
         winner.transfer(winnerPrize);
 
         //Resetting the lottery pool to an empty array
         lotteryPool = new address payable[](0);
-        lotteryPool.push(payable(msg.sender));
     }
 }
